@@ -5,29 +5,58 @@ import classes from './AvailableMeals.module.css';
 
 const AvailableMeals = () => {
   const [meals, setMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState();
 
   useEffect(() => {
     const fetchMeals = async () => {
-      const res = await fetch(
-        'https://react-http-71624-default-rtdb.europe-west1.firebasedatabase.app/meals.json'
-      );
-      const data = await res.json();
+      try {
+        const res = await fetch(
+          'https://react-http-71624-default-rtdb.europe-west1.firebasedatabase.app/meals.json'
+        );
 
-      const loadedMeals = [];
-      for (const key in data) {
-        loadedMeals.push({
-          id: key,
-          name: data[key].name,
-          description: data[key].description,
-          price: data[key].price,
-        });
+        if (!res.ok) {
+          throw new Error('Something went wrong!');
+        }
+
+        const data = await res.json();
+
+        const loadedMeals = [];
+        for (const key in data) {
+          loadedMeals.push({
+            id: key,
+            name: data[key].name,
+            description: data[key].description,
+            price: data[key].price,
+          });
+        }
+
+        setMeals(loadedMeals);
+        setIsLoading(false);
+      } catch (err) {
+        setIsLoading(false);
+        setHasError(err.message);
       }
-
-      setMeals(loadedMeals);
     };
 
     fetchMeals();
   }, []);
+
+  if (isLoading) {
+    return (
+      <section className={classes.mealsIsLoading}>
+        <p>Loading...</p>
+      </section>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <section className={classes.mealsError}>
+        <p>{hasError}</p>
+      </section>
+    );
+  }
 
   const mealsList = meals.map((meal) => (
     <MealItem
